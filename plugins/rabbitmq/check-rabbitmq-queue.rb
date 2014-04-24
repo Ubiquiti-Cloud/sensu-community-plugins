@@ -26,6 +26,12 @@ class CheckRabbitMQMessages < Sensu::Plugin::Check::CLI
     :proc => proc { |p| p.to_i },
     :default => 55672
 
+  option :ssl,
+    :description => "Enable SSL for connection to the API",
+    :long => "--ssl",
+    :boolean => true,
+    :default => false
+
   option :user,
     :description => "RabbitMQ management API user",
     :long => "--user USER",
@@ -36,11 +42,10 @@ class CheckRabbitMQMessages < Sensu::Plugin::Check::CLI
     :long => "--password PASSWORD",
     :default => "guest"
 
-  option :ssl,
-    :description => "Enable SSL for connection to the API",
-    :long => "--ssl",
-    :boolean => true,
-    :default => false
+  option :queue,
+    :description => "RabbitMQ queue to monitor",
+    :long => "--queue queue_name",
+    :required => true
 
   option :warn,
     :short => '-w NUM_MESSAGES',
@@ -71,11 +76,18 @@ class CheckRabbitMQMessages < Sensu::Plugin::Check::CLI
 
   def run
     rabbitmq = get_rabbitmq_info
-    overview = rabbitmq.overview
-    total = overview['queue_totals']['messages']
-    message "#{total}"
-    critical if total > config[:critical].to_i
-    warning if total > config[:warn].to_i
+    queues = rabbitmq.queues
+    queues.each do |queue|
+      if queue['name'] == config[:queue]
+        total = queue['messages']
+        message "#{total}"
+        critical if total > config[:critical].to_i
+        warning if total > config[:warn].to_i
+        ok
+      end
+    end
+
+    warning "No Queue: #{config[:queue]}"
     ok
   end
 
