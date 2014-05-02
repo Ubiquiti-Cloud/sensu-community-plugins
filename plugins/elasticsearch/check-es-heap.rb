@@ -52,6 +52,7 @@ class ESHeap < Sensu::Plugin::Check::CLI
     :short => '-p N',
     :long => '--port N',
     :description => "Specify port used",
+    :proc => proc {|a| a.to_i },
     :default => 9200
 
   def get_es_version
@@ -61,7 +62,7 @@ class ESHeap < Sensu::Plugin::Check::CLI
 
   def get_es_resource(resource)
     begin
-      r = RestClient::Resource.new("http://#{config[:server]}:9200/#{resource}", :timeout => 45)
+      r = RestClient::Resource.new("http://#{config[:server]}:#{config[:port]}/#{resource}", :timeout => 45)
       JSON.parse(r.get)
     rescue Errno::ECONNREFUSED
       warning 'Connection refused'
