@@ -55,6 +55,7 @@ class ESMetrics < Sensu::Plugin::Metric::CLI::Graphite
     :description => "Elasticsearch port.",
     :short => "-p PORT",
     :long => "--port PORT",
+    :proc => proc {|a| a.to_i }
     :default => 9200
 
   option :request_timeout,
@@ -81,7 +82,7 @@ class ESMetrics < Sensu::Plugin::Metric::CLI::Graphite
     :boolean => true,
     :default => false
 
-  option :disable_thread_pool,
+  option :disable_thread_pool_stats,
     :description => "Disable thread-pool statistics",
     :long => "--disable-thread-pool-stats",
     :boolean => true,
@@ -106,10 +107,10 @@ class ESMetrics < Sensu::Plugin::Metric::CLI::Graphite
   def run
 
     # invert various stats depending on if some flags are set
-    os_stat = (true ^ config[:disable_os_stats])
-    process_stats = (true ^ config[:disable_process_stats])
-    jvm_stats = (true ^ config[:disable_jvm_stats])
-    tp_stats = (true ^ config[:disable_thread_pool])
+    os_stat = !config[:disable_os_stats]
+    process_stats = !config[:disable_process_stats]
+    jvm_stats = !config[:disable_jvm_stats]
+    tp_stats = !config[:disable_thread_pool_stats]
 
     stats_query_string = [
         "clear=true",
