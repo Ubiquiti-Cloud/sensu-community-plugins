@@ -62,6 +62,7 @@ class ESMetrics < Sensu::Plugin::Metric::CLI::Graphite
     :description => "Request timeout to elasticsearch",
     :short => "-t TIMEOUT",
     :long => "--timeout TIMEOUT",
+    :proc => proc {|a| a.to_i },
     :default => 30
 
   option :disable_jvm_stats,
@@ -208,9 +209,11 @@ class ESMetrics < Sensu::Plugin::Metric::CLI::Graphite
     metrics['network.tcp.curr_estab']           = node['network']['tcp']['curr_estab']
     metrics['network.tcp.estab_resets']         = node['network']['tcp']['estab_resets']
 
-    node['thread_pool'].each do |pool, stat|
-      stat.each do |k, v|
-        metrics["thread_pool.#{pool}.#{k}"] = v
+    if tp_stats
+      node['thread_pool'].each do |pool, stat|
+        stat.each do |k, v|
+          metrics["thread_pool.#{pool}.#{k}"] = v
+        end
       end
     end
 
